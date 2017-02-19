@@ -232,16 +232,16 @@ inject≤-refl zero    (s≤s _  ) = refl
 inject≤-refl (suc i) (s≤s n≤n) = cong suc (inject≤-refl i n≤n)
 
 thin-injective : {n : ℕ}{z : Fin (suc n)}{x y : Fin n}(e : thin z x ≡ thin z y) → x ≡ y
-thin-injective {z = zero}  {x = x}     {y = y}     e = drop-suc e
+thin-injective {z = zero}  {x = x}     {y = y}     e = suc-injective e
 thin-injective {z = suc z} {x = zero}  {y = zero}  e = refl
 thin-injective {z = suc z} {x = zero}  {y = suc y} ()
 thin-injective {z = suc z} {x = suc x} {y = zero}  ()
-thin-injective {z = suc z} {x = suc x} {y = suc y} e = cong suc (thin-injective {z = z} {x = x} {y = y} (drop-suc e))
+thin-injective {z = suc z} {x = suc x} {y = suc y} e = cong suc (thin-injective {z = z} {x = x} {y = y} (suc-injective e))
 
 thin-no-confusion : {n : ℕ}{z : Fin (suc n)}{x : Fin n} -> z ≢ thin z x
 thin-no-confusion {z = zero}  {x = x}    ()
 thin-no-confusion {z = suc z} {x = zero} ()
-thin-no-confusion {z = suc z} {x = suc x} e = thin-no-confusion (drop-suc e)
+thin-no-confusion {z = suc z} {x = suc x} e = thin-no-confusion (suc-injective e)
 
 thick-thin : {n : ℕ}(x y : Fin n) → thick (thin (suc x) y) x ≡ y
 thick-thin x       zero    = refl

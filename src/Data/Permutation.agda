@@ -69,7 +69,7 @@ insert  x     y  []     = y ∷ []
 insert  fz    y (z ∷ p) = y ∷ (z ∷ p)
 insert (fs x) y (z ∷ p) = (thin y z) ∷ (insert x (thick y z) p)
 
-infixr 4 _∘_
+infixr 9 _∘_
 
 -- Composition of injective functions
 
