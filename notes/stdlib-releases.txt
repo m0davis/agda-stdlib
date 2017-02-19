@@ -16,17 +16,9 @@ procedure can be followed:
 
 * Update the lib.cabal version to X.Y.
 
-* Update the ffi/agda-lib-ffi.cabal version to X.Y.
-
 * Ensure that the library type-checks using Agda A.B.C:
 
     make test
-
-* Ensure that the auxiliary Haskell code used by the library builds
-  properly (with the versions of GHC supported by Agda A.B.C if
-  possible):
-
-    make agda-lib-ffi
 
 * If necessary, copy the contents of notes/future-version.txt to
   CHANGELOG. Remove the contents from notes/future-version.txt
@@ -38,7 +30,7 @@ procedure can be followed:
 * Tag version X.Y (do not forget to record the changes above first):
 
     VERSION=X.Y
-    git tag -a v$VERSION -m "Agda standard library v$VERSION"
+    git tag -a v$VERSION -m "Agda standard library version $VERSION"
 
 * Removed release-specific information from README.agda.
 
@@ -48,10 +40,17 @@ procedure can be followed:
 
     git push --follow-tags
 
-* Update the Agda wiki:
+* Update submodule commit for the stable library in Agda:
 
-  ** News section on the main page.
+    cd agda
+    make fast-forward-std-lib
+    record-the-changes-and-push
+
+* Update the Agda wiki:
 
   ** The standard library page.
 
-* Announce the release of the new version on the Agda mailing list.
+  ** News section on the main page.
+
+* Announce the release of the new version on the Agda mailing lists
+  (users and developers).
