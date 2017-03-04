@@ -128,6 +128,19 @@ thick {suc n} zero    x      = zero
 thick        (suc y)  zero   = y
 thick        (suc y) (suc x) = suc (thick y x)
 
+module _ where
+
+  open import Data.Maybe using (Maybe; nothing; just; functor)
+  open import Category.Functor using (RawFunctor)
+  open RawFunctor (functor {Level.zero}) using (_<$>_)
+
+  check : ∀ {n} -> (x y : Fin (suc n)) -> Maybe (Fin n)
+  check zero zero = nothing
+  check zero (suc y) = just y
+  check {zero} (suc ()) _
+  check {suc _} (suc x) zero = just zero
+  check {suc _} (suc x) (suc y) = suc <$> (check x y)
+
 ------------------------------------------------------------------------
 -- Operations
 

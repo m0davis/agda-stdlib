@@ -268,6 +268,47 @@ thin-zero {z = zero } {x = x}     ()
 thin-zero {z = suc z} {x = zero}  e = refl
 thin-zero {z = suc z} {x = suc x} ()
 
+module _ where
+
+  open import Data.Maybe using (Maybe; nothing; just; functor)
+  open import Category.Functor using (RawFunctor)
+  import Level
+  open RawFunctor (functor {Level.zero}) using (_<$>_)
+  open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+  open import Data.Sum
+  open import Data.Empty
+
+  thinfact3 : ∀{n} x (y : Fin (suc n)) -> ¬ x ≡ y -> ∃ λ y' -> thin x y' ≡ y
+  thinfact3 zero zero ne = ⊥-elim (ne refl)
+  thinfact3 zero (suc y) _ = y , refl
+  thinfact3 {zero} (suc ()) _ _
+  thinfact3 {suc n} (suc x) zero ne = zero , refl
+  thinfact3 {suc n} (suc x) (suc y) ne with y | thinfact3 x y (ne ∘ cong suc)
+  ... | .(thin x y') | y' , refl = suc y' , refl
+
+  thin-check-id : ∀ {n} (x : Fin (suc n)) y -> ∀ y' -> thin x y' ≡ y -> check x y ≡ just y'
+  thin-check-id zero zero y' ()
+  thin-check-id zero (suc y) .y refl = refl
+  thin-check-id {suc n} (suc x) zero zero refl = refl
+  thin-check-id {suc _} (suc _) zero (suc _) ()
+  thin-check-id {suc n} (suc x) (suc y) zero ()
+  thin-check-id {suc n} (suc x) (suc .(thin x y')) (suc y') refl with check x (thin x y') | thin-check-id x (thin x y') y' refl
+  …                                                                 | .(just y')          | refl = refl
+  thin-check-id {zero} (suc ()) _ _ _
+
+  checkhalf1 : ∀ {n} (x : Fin (suc n)) -> check x x ≡ nothing
+  checkhalf1 zero = refl
+  checkhalf1 {suc _} (suc x) = cong (_<$>_ suc) (checkhalf1 x)
+  checkhalf1 {zero} (suc ())
+
+  checkfact1 : ∀ {n} (x : Fin (suc n)) y r
+    -> check x y ≡ r
+    -> x ≡ y × r ≡ nothing ⊎ ∃ λ y' -> thin x y' ≡ y × r ≡ just y'
+  checkfact1 x y .(check x y) refl with x ≟ y
+  checkfact1 x .x ._ refl | yes refl = inj₁ (refl , checkhalf1 x)
+  ... | no el with thinfact3 x y el
+  ...            | y' , thinxy'=y = inj₂ (y' , ( thinxy'=y , thin-check-id x y y' thinxy'=y ))
+
 ≺⇒<′ : _≺_ ⇒ N._<′_
 ≺⇒<′ (n ≻toℕ i) = N.≤⇒≤′ (bounded i)
 

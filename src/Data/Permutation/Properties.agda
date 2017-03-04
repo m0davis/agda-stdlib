@@ -92,65 +92,65 @@ private
   fs-injective : {n : Nat}{f0 f1 : Fin n}(e : fs f0 ≡ fs f1) → f0 ≡ f1
   fs-injective refl = refl
 
-  inj-thin : {n m : Nat}(p : Inj (ns n) (ns m))(x : Fin (ns n))(y : Fin n) →
-    thin (< p > x) (< delete x p > y) ≡ < p > (thin x y)
-  inj-thin (x ∷ p)                 fz     z      = refl
-  inj-thin (_∷_ {nz} x p)          (fs y) ()
-  inj-thin (_∷_ {ns n} {nz} x ())  (fs y) z
-  inj-thin (_∷_ {ns n} {ns m} x p) (fs y) fz     = thin-thin-thick x (< p > y)
-  inj-thin (_∷_ {ns n} {ns m} x p) (fs y) (fs z) =
-    helper x (< p > y) (< p > (thin y z)) (< delete y p > z) (inj-thin p y z)
-    where
-    helper : {n : Nat}(x : Fin (ns (ns n)))(a c : Fin (ns n))
-      (b : Fin n)(e : thin a b ≡ c) ->
-      thin (thin x a) (thin (thick x a) b) ≡ thin x c
-    helper fz     a      c      b      e = cong fs e
-    helper (fs x) fz     c      b      e = cong (thin (fs x)) e
-    helper (fs x) (fs a) fz     fz     e = refl
-    helper (fs x) (fs a) fz     (fs b) ()
-    helper (fs x) (fs a) (fs c) fz     ()
-    helper (fs x) (fs a) (fs c) (fs b) e = cong fs (helper x a c b (fs-injective e))
+inj-thin : {n m : Nat}(p : Inj (ns n) (ns m))(x : Fin (ns n))(y : Fin n) →
+  thin (< p > x) (< delete x p > y) ≡ < p > (thin x y)
+inj-thin (x ∷ p)                 fz     z      = refl
+inj-thin (_∷_ {nz} x p)          (fs y) ()
+inj-thin (_∷_ {ns n} {nz} x ())  (fs y) z
+inj-thin (_∷_ {ns n} {ns m} x p) (fs y) fz     = thin-thin-thick x (< p > y)
+inj-thin (_∷_ {ns n} {ns m} x p) (fs y) (fs z) =
+  helper x (< p > y) (< p > (thin y z)) (< delete y p > z) (inj-thin p y z)
+  where
+  helper : {n : Nat}(x : Fin (ns (ns n)))(a c : Fin (ns n))
+    (b : Fin n)(e : thin a b ≡ c) ->
+    thin (thin x a) (thin (thick x a) b) ≡ thin x c
+  helper fz     a      c      b      e = cong fs e
+  helper (fs x) fz     c      b      e = cong (thin (fs x)) e
+  helper (fs x) (fs a) fz     fz     e = refl
+  helper (fs x) (fs a) fz     (fs b) ()
+  helper (fs x) (fs a) (fs c) fz     ()
+  helper (fs x) (fs a) (fs c) (fs b) e = cong fs (helper x a c b (fs-injective e))
 
-  inj-thick : {n m : Nat}(f : Inj (ns n) (ns m))(x : Fin (ns n))(y : Fin n) →
-    thick (< f > x) (< (delete x f) > y) ≡ < (delete (thin x y) f) > (thick x y)
-  inj-thick (_∷_ {nz} x p)          y      ()
-  inj-thick (_∷_ {ns n} {nz} x ())  y      z
-  inj-thick (_∷_ {ns n} {ns m} x p) fz     z      = refl
-  inj-thick (_∷_ {ns n} {ns m} x p) (fs y) fz     = thick-thin-thick x (< p > y)
-  inj-thick (_∷_ {ns n} {ns m} x p) (fs y) (fs z) =
-    trans (helper x (< p > y) (< delete y p > z))
-      (cong₂ (λ a b → thin (thick x a) b) (inj-thin p y z) (inj-thick p y z))
-    where
-    helper : {n : Nat}(a : Fin (ns (ns n)))(b : Fin (ns n))(c : Fin n) ->
-      thick (thin a b) (thin (thick a b) c) ≡ thin (thick a (thin b c)) (thick b c)
-    helper fz     b      c      = refl
-    helper (fs a) fz     fz     = refl
-    helper (fs a) fz     (fs c) = refl
-    helper (fs a) (fs b) fz     = refl
-    helper (fs a) (fs b) (fs c) = cong fs (helper a b c)
+inj-thick : {n m : Nat}(f : Inj (ns n) (ns m))(x : Fin (ns n))(y : Fin n) →
+  thick (< f > x) (< (delete x f) > y) ≡ < (delete (thin x y) f) > (thick x y)
+inj-thick (_∷_ {nz} x p)          y      ()
+inj-thick (_∷_ {ns n} {nz} x ())  y      z
+inj-thick (_∷_ {ns n} {ns m} x p) fz     z      = refl
+inj-thick (_∷_ {ns n} {ns m} x p) (fs y) fz     = thick-thin-thick x (< p > y)
+inj-thick (_∷_ {ns n} {ns m} x p) (fs y) (fs z) =
+  trans (helper x (< p > y) (< delete y p > z))
+    (cong₂ (λ a b → thin (thick x a) b) (inj-thin p y z) (inj-thick p y z))
+  where
+  helper : {n : Nat}(a : Fin (ns (ns n)))(b : Fin (ns n))(c : Fin n) ->
+    thick (thin a b) (thin (thick a b) c) ≡ thin (thick a (thin b c)) (thick b c)
+  helper fz     b      c      = refl
+  helper (fs a) fz     fz     = refl
+  helper (fs a) fz     (fs c) = refl
+  helper (fs a) (fs b) fz     = refl
+  helper (fs a) (fs b) (fs c) = cong fs (helper a b c)
 
-  delete-swap : {n m : Nat}(x : Fin (ns (ns n)))(y : Fin (ns n))(f : Inj (ns (ns n)) (ns (ns m))) ->
-    delete y (delete x f) ≡ delete (thick x y) (delete (thin x y) f)
-  delete-swap                fz     fz      (z ∷ p) = refl
-  delete-swap                fz     (fs y)  (z ∷ p) = refl
-  delete-swap                (fs x) fz      (z ∷ p) = refl
-  delete-swap {nz}           (fs x) (fs ()) (z ∷ p)
-  delete-swap {ns n} {nz}    (fs x) (fs y)  (z ∷ x' ∷ ())
-  delete-swap {ns n} {ns n'} (fs x) (fs y)  (z ∷ p) =
-    cong₂ _∷_
-      (trans (helper z (< p > x) (< delete x p > y)) (cong₂ (λ a b → thick (thick z a) b) (inj-thin p x y) (inj-thick p x y)))
-      (delete-swap x y p)
-    where
-    helper : {n : Nat}(a : Fin (ns (ns n)))(b : Fin (ns n))(c : Fin n) →
-      thick (thick a b) c ≡ thick (thick a (thin b c)) (thick b c)
-    helper fz     fz     fz     = refl
-    helper fz     fz     (fs c) = refl
-    helper fz     (fs b) fz     = refl
-    helper fz     (fs b) (fs c) = refl
-    helper (fs a) fz     fz     = refl
-    helper (fs a) fz     (fs c) = refl
-    helper (fs a) (fs b) fz     = refl
-    helper (fs a) (fs b) (fs c) = cong fs (helper a b c)
+delete-swap : {n m : Nat}(x : Fin (ns (ns n)))(y : Fin (ns n))(f : Inj (ns (ns n)) (ns (ns m))) ->
+  delete y (delete x f) ≡ delete (thick x y) (delete (thin x y) f)
+delete-swap                fz     fz      (z ∷ p) = refl
+delete-swap                fz     (fs y)  (z ∷ p) = refl
+delete-swap                (fs x) fz      (z ∷ p) = refl
+delete-swap {nz}           (fs x) (fs ()) (z ∷ p)
+delete-swap {ns n} {nz}    (fs x) (fs y)  (z ∷ x' ∷ ())
+delete-swap {ns n} {ns n'} (fs x) (fs y)  (z ∷ p) =
+  cong₂ _∷_
+    (trans (helper z (< p > x) (< delete x p > y)) (cong₂ (λ a b → thick (thick z a) b) (inj-thin p x y) (inj-thick p x y)))
+    (delete-swap x y p)
+  where
+  helper : {n : Nat}(a : Fin (ns (ns n)))(b : Fin (ns n))(c : Fin n) →
+    thick (thick a b) c ≡ thick (thick a (thin b c)) (thick b c)
+  helper fz     fz     fz     = refl
+  helper fz     fz     (fs c) = refl
+  helper fz     (fs b) fz     = refl
+  helper fz     (fs b) (fs c) = refl
+  helper (fs a) fz     fz     = refl
+  helper (fs a) fz     (fs c) = refl
+  helper (fs a) (fs b) fz     = refl
+  helper (fs a) (fs b) (fs c) = cong fs (helper a b c)
 
 -- Injection is defined correctly w.r.t. composition
 
