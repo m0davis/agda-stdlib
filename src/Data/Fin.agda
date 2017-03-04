@@ -10,6 +10,9 @@
 
 module Data.Fin where
 
+open import Data.Maybe
+  using (Maybe; nothing; just)
+  renaming (map to mapMaybe)
 open import Data.Nat as Nat
   using (ℕ; zero; suc; z≤n; s≤s)
   renaming ( _+_ to _N+_; _∸_ to _N∸_
@@ -115,6 +118,7 @@ strengthen : ∀ {n} (i : Fin n) → Fin′ (suc i)
 strengthen zero    = zero
 strengthen (suc i) = suc (strengthen i)
 
+------------------------------------------------------------------------
 -- thin and thick functions from ``First-order unification by structural recursion'' by Conor McBride
 
 thin : {n : ℕ}(x : Fin (suc n))(y : Fin n) → Fin (suc n)
@@ -122,24 +126,20 @@ thin  zero    y      = suc y
 thin (suc x)  zero   = zero
 thin (suc x) (suc y) = suc (thin x y)
 
+-- similar to McBride's "thick", but without the Maybe
 thick : {m : ℕ}(y : Fin (suc m))(x : Fin m) → Fin m
 thick {zero}  zero    ()
 thick {suc n} zero    x      = zero
 thick        (suc y)  zero   = y
 thick        (suc y) (suc x) = suc (thick y x)
 
-module _ where
-
-  open import Data.Maybe using (Maybe; nothing; just; functor)
-  open import Category.Functor using (RawFunctor)
-  open RawFunctor (functor {Level.zero}) using (_<$>_)
-
-  check : ∀ {n} -> (x y : Fin (suc n)) -> Maybe (Fin n)
-  check zero zero = nothing
-  check zero (suc y) = just y
-  check {zero} (suc ()) _
-  check {suc _} (suc x) zero = just zero
-  check {suc _} (suc x) (suc y) = suc <$> (check x y)
+-- "check" here is actually McBride's "thick"
+check : ∀ {n} → (x y : Fin (suc n)) → Maybe (Fin n)
+check zero zero = nothing
+check zero (suc y) = just y
+check {zero} (suc ()) _
+check {suc _} (suc x) zero = just zero
+check {suc _} (suc x) (suc y) = mapMaybe suc (check x y)
 
 ------------------------------------------------------------------------
 -- Operations
