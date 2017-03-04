@@ -8,12 +8,16 @@
 module Data.Fin.Properties where
 
 open import Algebra
+open import Data.Empty
 open import Data.Fin
+open import Data.Maybe using (Maybe; nothing; just)
+ renaming (map to mapMaybe)
 open import Data.Nat as N using (ℕ; zero; suc; s≤s; z≤n; _∸_) renaming
   (_≤_ to _ℕ≤_
   ; _<_ to _ℕ<_
   ; _+_ to _ℕ+_)
 import Data.Nat.Properties as N
+open import Data.Sum
 open import Data.Product
 open import Function
 open import Function.Equality as FunS using (_⟨$⟩_)
@@ -243,6 +247,14 @@ thin-no-confusion {z = zero}  {x = x}    ()
 thin-no-confusion {z = suc z} {x = zero} ()
 thin-no-confusion {z = suc z} {x = suc x} e = thin-no-confusion (suc-injective e)
 
+thin-complete : ∀{n} x (y : Fin (suc n)) → x ≢ y → ∃ λ y' → thin x y' ≡ y
+thin-complete zero zero ne = ⊥-elim (ne refl)
+thin-complete zero (suc y) _ = y , refl
+thin-complete {zero} (suc ()) _ _
+thin-complete {suc n} (suc x) zero ne = zero , refl
+thin-complete {suc n} (suc x) (suc y) ne with y | thin-complete x y (ne ∘ cong suc)
+…                                           | _ | y' , refl = suc y' , refl
+
 thick-thin : {n : ℕ}(x y : Fin n) → thick (thin (suc x) y) x ≡ y
 thick-thin x       zero    = refl
 thick-thin zero    (suc y) = refl
@@ -268,46 +280,28 @@ thin-zero {z = zero } {x = x}     ()
 thin-zero {z = suc z} {x = zero}  e = refl
 thin-zero {z = suc z} {x = suc x} ()
 
-module _ where
+thin-check-id : ∀ {n} (x : Fin (suc n)) y → ∀ y' → thin x y' ≡ y → check x y ≡ just y'
+thin-check-id zero zero y' ()
+thin-check-id zero (suc y) _ refl = refl
+thin-check-id {suc n} (suc x) zero zero refl = refl
+thin-check-id {suc _} (suc _) zero (suc _) ()
+thin-check-id {suc n} (suc x) (suc y) zero ()
+thin-check-id {suc n} (suc x) (suc _) (suc y') refl with check x (thin x y') | thin-check-id x (thin x y') y' refl
+…                                                      | _                   | refl = refl
+thin-check-id {zero} (suc ()) _ _ _
 
-  open import Data.Maybe using (Maybe; nothing; just; functor)
-  open import Category.Functor using (RawFunctor)
-  import Level
-  open RawFunctor (functor {Level.zero}) using (_<$>_)
-  open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
-  open import Data.Sum
-  open import Data.Empty
+check-reflexivity : ∀ {n} (x : Fin (suc n)) → check x x ≡ nothing
+check-reflexivity zero = refl
+check-reflexivity {suc _} (suc x) = cong (mapMaybe suc) (check-reflexivity x)
+check-reflexivity {zero} (suc ())
 
-  thinfact3 : ∀{n} x (y : Fin (suc n)) -> ¬ x ≡ y -> ∃ λ y' -> thin x y' ≡ y
-  thinfact3 zero zero ne = ⊥-elim (ne refl)
-  thinfact3 zero (suc y) _ = y , refl
-  thinfact3 {zero} (suc ()) _ _
-  thinfact3 {suc n} (suc x) zero ne = zero , refl
-  thinfact3 {suc n} (suc x) (suc y) ne with y | thinfact3 x y (ne ∘ cong suc)
-  ... | .(thin x y') | y' , refl = suc y' , refl
-
-  thin-check-id : ∀ {n} (x : Fin (suc n)) y -> ∀ y' -> thin x y' ≡ y -> check x y ≡ just y'
-  thin-check-id zero zero y' ()
-  thin-check-id zero (suc y) .y refl = refl
-  thin-check-id {suc n} (suc x) zero zero refl = refl
-  thin-check-id {suc _} (suc _) zero (suc _) ()
-  thin-check-id {suc n} (suc x) (suc y) zero ()
-  thin-check-id {suc n} (suc x) (suc .(thin x y')) (suc y') refl with check x (thin x y') | thin-check-id x (thin x y') y' refl
-  …                                                                 | .(just y')          | refl = refl
-  thin-check-id {zero} (suc ()) _ _ _
-
-  checkhalf1 : ∀ {n} (x : Fin (suc n)) -> check x x ≡ nothing
-  checkhalf1 zero = refl
-  checkhalf1 {suc _} (suc x) = cong (_<$>_ suc) (checkhalf1 x)
-  checkhalf1 {zero} (suc ())
-
-  checkfact1 : ∀ {n} (x : Fin (suc n)) y r
-    -> check x y ≡ r
-    -> x ≡ y × r ≡ nothing ⊎ ∃ λ y' -> thin x y' ≡ y × r ≡ just y'
-  checkfact1 x y .(check x y) refl with x ≟ y
-  checkfact1 x .x ._ refl | yes refl = inj₁ (refl , checkhalf1 x)
-  ... | no el with thinfact3 x y el
-  ...            | y' , thinxy'=y = inj₂ (y' , ( thinxy'=y , thin-check-id x y y' thinxy'=y ))
+check-correct : ∀ {n} (x : Fin (suc n)) y r
+  → check x y ≡ r
+  → x ≡ y × r ≡ nothing ⊎ ∃ λ y' → thin x y' ≡ y × r ≡ just y'
+check-correct x y _ refl with x ≟ y
+check-correct x _ _ refl | yes refl = inj₁ (refl , check-reflexivity x)
+… | no el with thin-complete x y el
+…            | y' , thinxy'=y = inj₂ (y' , ( thinxy'=y , thin-check-id x y y' thinxy'=y ))
 
 ≺⇒<′ : _≺_ ⇒ N._<′_
 ≺⇒<′ (n ≻toℕ i) = N.≤⇒≤′ (bounded i)
